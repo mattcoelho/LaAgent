@@ -42,7 +42,7 @@ api_key = st.text_input("Enter Groq API Key to test:", type="password", help="Ge
 if api_key:
     try:
         # Switch to Groq (Llama 3 70B is smart enough for tools)
-        llm = ChatGroq(model="llama3-70b-8192", api_key=api_key)
+        llm = ChatGroq(model="llama-3.3-70b-versatile", api_key=api_key)
         agent_executor = create_react_agent(llm, tools)
 
         # 5. CHAT INTERFACE
