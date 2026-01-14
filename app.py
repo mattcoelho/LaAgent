@@ -4,7 +4,7 @@ from langgraph.prebuilt import create_react_agent
 from langchain_core.tools import tool
 
 # 1. PAGE CONFIG
-st.set_page_config(page_title="Sierra Demo Agent", layout="wide")
+st.set_page_config(page_title="LaAgent Demo", layout="wide")
 
 st.title("⚡ Real-Time Action Agent (Groq Powered)")
 st.markdown("A deterministic agent with **Human-in-the-Loop** guardrails, running on Llama 3 via Groq for ultra-low latency.")
