@@ -1,15 +1,15 @@
 import streamlit as st
-from langchain_openai import ChatOpenAI
+from langchain_groq import ChatGroq
 from langgraph.prebuilt import create_react_agent
 from langchain_core.tools import tool
 
-# 1. PAGE CONFIG (Looks Professional)
+# 1. PAGE CONFIG
 st.set_page_config(page_title="Sierra Demo Agent", layout="wide")
 
-st.title("🛡️ Enterprise Action Agent Demo")
-st.markdown("A deterministic agent with **Human-in-the-Loop** guardrails.")
+st.title("⚡ Real-Time Action Agent (Groq Powered)")
+st.markdown("A deterministic agent with **Human-in-the-Loop** guardrails, running on Llama 3 via Groq for ultra-low latency.")
 
-# 2. DEFINE TOOLS ( The "Actions")
+# 2. DEFINE TOOLS (The "Actions")
 @tool
 def check_order_status(order_id: str):
     """Checks the status of a customer order."""
@@ -29,34 +29,35 @@ if "messages" not in st.session_state:
 if "audit_log" not in st.session_state:
     st.session_state.audit_log = []
 
-# Sidebar: The "Glass Box" (Sierra loves transparency)
+# Sidebar: The "Glass Box"
 with st.sidebar:
     st.header("🧠 Agent Reasoning (Glass Box)")
     st.caption("Live view of tool calls and logic states.")
     for log in st.session_state.audit_log:
         st.code(log, language="json")
 
-# 4. API KEY INPUT (Secure way for public demo)
-api_key = st.text_input("Enter OpenAI API Key to test:", type="password")
+# 4. API KEY INPUT (Groq)
+api_key = st.text_input("Enter Groq API Key to test:", type="password", help="Get a free key at console.groq.com")
 
 if api_key:
-    llm = ChatOpenAI(model="gpt-4o", api_key=api_key)
-    agent_executor = create_react_agent(llm, tools)
+    try:
+        # Switch to Groq (Llama 3 70B is smart enough for tools)
+        llm = ChatGroq(model="llama3-70b-8192", api_key=api_key)
+        agent_executor = create_react_agent(llm, tools)
 
-    # 5. CHAT INTERFACE
-    for msg in st.session_state.messages:
-        with st.chat_message(msg["role"]):
-            st.write(msg["content"])
+        # 5. CHAT INTERFACE
+        for msg in st.session_state.messages:
+            with st.chat_message(msg["role"]):
+                st.write(msg["content"])
 
-    if prompt := st.chat_input("Try: 'Check status of order 123'"):
-        # Display user message
-        st.session_state.messages.append({"role": "user", "content": prompt})
-        with st.chat_message("user"):
-            st.write(prompt)
+        if prompt := st.chat_input("Try: 'Check status of order 123'"):
+            # Display user message
+            st.session_state.messages.append({"role": "user", "content": prompt})
+            with st.chat_message("user"):
+                st.write(prompt)
 
-        # Run Agent
-        with st.chat_message("assistant"):
-            try:
+            # Run Agent
+            with st.chat_message("assistant"):
                 # This is where LangGraph executes
                 response = agent_executor.invoke({"messages": [("user", prompt)]})
                 bot_msg = response["messages"][-1].content
@@ -66,8 +67,7 @@ if api_key:
                 st.session_state.messages.append({"role": "assistant", "content": bot_msg})
                 
                 # Update Glass Box (Log the tool calls)
-                # In a real app, you'd parse the intermediate steps here
                 st.session_state.audit_log.append(f"User: {prompt}\nResponse: {bot_msg}")
                 
-            except Exception as e:
-                st.error(f"Error: {e}")
+    except Exception as e:
+        st.error(f"Error: {e}")
