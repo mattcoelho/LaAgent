@@ -49,11 +49,7 @@ if api_key:
     try:
         # Switch to Groq (Llama 3 70B is smart enough for tools)
         llm = ChatGroq(model="llama-3.3-70b-versatile", api_key=api_key)
-        agent_executor = create_react_agent(
-            llm, 
-            tools,
-            system_message=SystemMessage(content=SYSTEM_PROMPT)
-        )
+        agent_executor = create_react_agent(llm, tools)
 
         # 5. CHAT INTERFACE
         for msg in st.session_state.messages:
@@ -69,7 +65,12 @@ if api_key:
             # Run Agent
             with st.chat_message("assistant"):
                 # This is where LangGraph executes
-                response = agent_executor.invoke({"messages": [("user", prompt)]})
+                # Prepend system message to set the bot's persona
+                messages = [
+                    SystemMessage(content=SYSTEM_PROMPT),
+                    ("user", prompt)
+                ]
+                response = agent_executor.invoke({"messages": messages})
                 bot_msg = response["messages"][-1].content
                 st.write(bot_msg)
                 

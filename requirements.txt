@@ -1,4 +1,4 @@
 streamlit
-langchain
-langchain-groq
-langgraph
+langchain>=0.3.0
+langchain-groq>=0.2.0
+langgraph>=0.2.27
