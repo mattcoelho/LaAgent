@@ -42,46 +42,48 @@ with st.sidebar:
     for log in st.session_state.audit_log:
         st.code(log, language="json")
 
-# 4. GET API KEY FROM STREAMLIT SECRETS
+# 4. GET API KEY FROM STREAMLIT SECRETS (with fallback for local development)
 try:
     api_key = st.secrets["GROQ_API_KEY"]
-except KeyError:
-    st.error("⚠️ Groq API key not found. Please create `.streamlit/secrets.toml` with your `GROQ_API_KEY`. See `.streamlit/secrets.toml.example` for reference.")
-    st.stop()
+except (KeyError, AttributeError):
+    # Fallback for local development or if secret not configured in Streamlit Cloud
+    st.info("💡 **Note:** For Streamlit Cloud deployment, configure `GROQ_API_KEY` in your app's Settings → Secrets. For local testing, enter your key below.")
+    api_key = st.text_input("Enter Groq API Key:", type="password", help="Get a free key at console.groq.com")
 
-try:
-    # Switch to Groq (Llama 3 70B is smart enough for tools)
-    llm = ChatGroq(model="llama-3.3-70b-versatile", api_key=api_key)
-    agent_executor = create_react_agent(llm, tools)
+if api_key:
+    try:
+        # Switch to Groq (Llama 3 70B is smart enough for tools)
+        llm = ChatGroq(model="llama-3.3-70b-versatile", api_key=api_key)
+        agent_executor = create_react_agent(llm, tools)
 
-    # 5. CHAT INTERFACE
-    for msg in st.session_state.messages:
-        with st.chat_message(msg["role"]):
-            st.write(msg["content"])
+        # 5. CHAT INTERFACE
+        for msg in st.session_state.messages:
+            with st.chat_message(msg["role"]):
+                st.write(msg["content"])
 
-    if prompt := st.chat_input("Try: 'Check status of order 123'"):
-        # Display user message
-        st.session_state.messages.append({"role": "user", "content": prompt})
-        with st.chat_message("user"):
-            st.write(prompt)
+        if prompt := st.chat_input("Try: 'Check status of order 123'"):
+            # Display user message
+            st.session_state.messages.append({"role": "user", "content": prompt})
+            with st.chat_message("user"):
+                st.write(prompt)
 
-        # Run Agent
-        with st.chat_message("assistant"):
-            # This is where LangGraph executes
-            # Prepend system message to set the bot's persona
-            messages = [
-                SystemMessage(content=SYSTEM_PROMPT),
-                ("user", prompt)
-            ]
-            response = agent_executor.invoke({"messages": messages})
-            bot_msg = response["messages"][-1].content
-            st.write(bot_msg)
-            
-            # Update State
-            st.session_state.messages.append({"role": "assistant", "content": bot_msg})
-            
-            # Update Glass Box (Log the tool calls)
-            st.session_state.audit_log.append(f"User: {prompt}\nResponse: {bot_msg}")
-            
-except Exception as e:
-    st.error(f"Error: {e}")
+            # Run Agent
+            with st.chat_message("assistant"):
+                # This is where LangGraph executes
+                # Prepend system message to set the bot's persona
+                messages = [
+                    SystemMessage(content=SYSTEM_PROMPT),
+                    ("user", prompt)
+                ]
+                response = agent_executor.invoke({"messages": messages})
+                bot_msg = response["messages"][-1].content
+                st.write(bot_msg)
+                
+                # Update State
+                st.session_state.messages.append({"role": "assistant", "content": bot_msg})
+                
+                # Update Glass Box (Log the tool calls)
+                st.session_state.audit_log.append(f"User: {prompt}\nResponse: {bot_msg}")
+                
+    except Exception as e:
+        st.error(f"Error: {e}")
