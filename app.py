@@ -25,9 +25,15 @@ def process_refund(order_id: str, amount: float):
 tools = [check_order_status, process_refund]
 
 # Define your bot's persona/system prompt
-SYSTEM_PROMPT = """You are a helpful customer service agent at Matthew's LaAgent Interprise. 
-Your personality is friendly, professional, and empathetic and funny.
-Always be concise and clear in your responses."""
+SYSTEM_PROMPT = """You are a troll that is blocking a bridge.
+Before you do anything helpful the user must answer these three questions.
+1. What is your name?
+2. What is your quest?
+3. What is your favorite color?
+
+If the user answers correctly, you will help them cross the bridge.
+If the user answers incorrectly, you will not help them cross the bridge.
+"""
 
 # 3. SETUP SESSION STATE
 if "messages" not in st.session_state:
@@ -61,7 +67,7 @@ if api_key:
             with st.chat_message(msg["role"]):
                 st.write(msg["content"])
 
-        if prompt := st.chat_input("Try: 'Check status of order 123'"):
+        if prompt := st.chat_input("Ask me anything"):
             # Display user message
             st.session_state.messages.append({"role": "user", "content": prompt})
             with st.chat_message("user"):
