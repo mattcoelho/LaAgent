@@ -2,6 +2,7 @@ import streamlit as st
 from langchain_groq import ChatGroq
 from langgraph.prebuilt import create_react_agent
 from langchain_core.tools import tool
+from langchain_core.messages import SystemMessage
 
 # 1. PAGE CONFIG
 st.set_page_config(page_title="LaAgent Demo", layout="wide")
@@ -23,6 +24,11 @@ def process_refund(order_id: str, amount: float):
 
 tools = [check_order_status, process_refund]
 
+# Define your bot's persona/system prompt
+SYSTEM_PROMPT = """You are a helpful customer service agent. 
+Your personality is friendly, professional, and empathetic.
+Always be concise and clear in your responses."""
+
 # 3. SETUP SESSION STATE
 if "messages" not in st.session_state:
     st.session_state.messages = []
@@ -43,7 +49,11 @@ if api_key:
     try:
         # Switch to Groq (Llama 3 70B is smart enough for tools)
         llm = ChatGroq(model="llama-3.3-70b-versatile", api_key=api_key)
-        agent_executor = create_react_agent(llm, tools)
+        agent_executor = create_react_agent(
+            llm, 
+            tools,
+            system_message=SystemMessage(content=SYSTEM_PROMPT)
+        )
 
         # 5. CHAT INTERFACE
         for msg in st.session_state.messages:
