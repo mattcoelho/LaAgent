@@ -3,6 +3,9 @@ from langchain_groq import ChatGroq
 from langgraph.prebuilt import create_react_agent
 from langchain_core.tools import tool
 from langchain_core.messages import SystemMessage
+import json
+import os
+from datetime import datetime
 
 # 1. PAGE CONFIG
 st.set_page_config(page_title="LaAgent Demo", layout="wide")
@@ -14,8 +17,15 @@ st.markdown("A deterministic agent with **Human-in-the-Loop** guardrails, runnin
 @tool
 def check_order_status(order_id: str):
     """Checks the status of a customer order."""
+    # #region agent log
+    debug_log("app.py:15", "check_order_status called", {"order_id": order_id}, "B")
+    # #endregion
     # Mock database return
-    return {"order_id": order_id, "status": "shipped", "delivery_date": "2025-10-25"}
+    result = {"order_id": order_id, "status": "shipped", "delivery_date": "2025-10-25"}
+    # #region agent log
+    debug_log("app.py:18", "check_order_status returning", {"result": result}, "B")
+    # #endregion
+    return result
 
 @tool
 def process_refund(order_id: str, amount: float):
@@ -23,6 +33,29 @@ def process_refund(order_id: str, amount: float):
     return {"status": "success", "refunded_amount": amount}
 
 tools = [check_order_status, process_refund]
+
+# Debug logging helper
+def debug_log(location, message, data, hypothesis_id=None):
+    log_path = "/Users/teusbombs/Documents/Development/LaAgent/.cursor/debug.log"
+    try:
+        with open(log_path, "a") as f:
+            log_entry = {
+                "id": f"log_{int(datetime.now().timestamp() * 1000)}",
+                "timestamp": int(datetime.now().timestamp() * 1000),
+                "location": location,
+                "message": message,
+                "data": data,
+                "sessionId": "debug-session",
+                "runId": "run1",
+                "hypothesisId": hypothesis_id
+            }
+            f.write(json.dumps(log_entry) + "\n")
+    except Exception:
+        pass
+
+# #region agent log
+debug_log("app.py:25", "Tools defined", {"tool_count": len(tools), "tool_names": [t.name for t in tools]}, "C")
+# #endregion
 
 # Define your bot's persona/system prompt
 SYSTEM_PROMPT = """You are a troll that is blocking a bridge.
@@ -59,7 +92,13 @@ except (KeyError, AttributeError):
 if api_key:
     try:
         # Switch to Groq (Llama 3 70B is smart enough for tools)
+        # #region agent log
+        debug_log("app.py:62", "Creating LLM", {"model": "llama-3.3-70b-versatile", "has_api_key": bool(api_key)}, "D")
+        # #endregion
         llm = ChatGroq(model="llama-3.3-70b-versatile", api_key=api_key)
+        # #region agent log
+        debug_log("app.py:64", "Creating agent executor", {"tool_count": len(tools)}, "E")
+        # #endregion
         agent_executor = create_react_agent(llm, tools)
 
         # 5. CHAT INTERFACE
@@ -81,8 +120,25 @@ if api_key:
                     SystemMessage(content=SYSTEM_PROMPT),
                     ("user", prompt)
                 ]
+                # #region agent log
+                debug_log("app.py:81", "Messages before invoke", {"message_count": len(messages), "system_prompt": SYSTEM_PROMPT[:100], "user_prompt": prompt}, "A")
+                # #endregion
+                # #region agent log
+                debug_log("app.py:84", "Invoking agent executor", {}, "E")
+                # #endregion
                 response = agent_executor.invoke({"messages": messages})
+                # #region agent log
+                debug_log("app.py:85", "Agent response received", {"response_type": type(response).__name__, "message_count": len(response.get("messages", [])) if isinstance(response, dict) else 0}, "E")
+                # #endregion
+                # #region agent log
+                if isinstance(response, dict) and "messages" in response:
+                    last_msg = response["messages"][-1] if response["messages"] else None
+                    debug_log("app.py:86", "Last message details", {"message_type": type(last_msg).__name__ if last_msg else None, "has_content": hasattr(last_msg, "content") if last_msg else False, "content_preview": str(last_msg.content)[:200] if last_msg and hasattr(last_msg, "content") else None}, "A")
+                # #endregion
                 bot_msg = response["messages"][-1].content
+                # #region agent log
+                debug_log("app.py:87", "Bot message extracted", {"message_length": len(str(bot_msg)) if bot_msg else 0, "message_preview": str(bot_msg)[:200] if bot_msg else None}, "A")
+                # #endregion
                 st.write(bot_msg)
                 
                 # Update State
@@ -92,4 +148,7 @@ if api_key:
                 st.session_state.audit_log.append(f"User: {prompt}\nResponse: {bot_msg}")
                 
     except Exception as e:
+        # #region agent log
+        debug_log("app.py:95", "Exception caught", {"error_type": type(e).__name__, "error_message": str(e), "error_args": str(e.args) if hasattr(e, "args") else None}, "A")
+        # #endregion
         st.error(f"Error: {e}")
