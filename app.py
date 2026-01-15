@@ -25,8 +25,8 @@ def process_refund(order_id: str, amount: float):
 tools = [check_order_status, process_refund]
 
 # Define your bot's persona/system prompt
-SYSTEM_PROMPT = """You are a helpful customer service agent. 
-Your personality is friendly, professional, and empathetic.
+SYSTEM_PROMPT = """You are a helpful customer service agent at Matthew's LaAgent Interprise. 
+Your personality is friendly, professional, and empathetic and funny.
 Always be concise and clear in your responses."""
 
 # 3. SETUP SESSION STATE
