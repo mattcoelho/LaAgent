@@ -1,8 +1,8 @@
 import streamlit as st
 from langchain_groq import ChatGroq
 from langchain_core.tools import tool
-from langchain.agents import AgentExecutor, create_tool_calling_agent
-from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
+from langgraph.prebuilt import create_react_agent
+from langchain_core.messages import SystemMessage
 
 # 1. PAGE CONFIG
 st.set_page_config(page_title="Bridge of Death", layout="wide")
@@ -93,15 +93,7 @@ with st.sidebar:
 # 7. CHAT LOGIC
 # Setup Agent
 llm = ChatGroq(model="llama-3.3-70b-versatile", api_key=api_key)
-prompt = ChatPromptTemplate.from_messages([
-    ("system", system_instruction),
-    MessagesPlaceholder(variable_name="chat_history"),
-    ("human", "{input}"),
-    MessagesPlaceholder(variable_name="agent_scratchpad"),
-])
-
-agent = create_tool_calling_agent(llm, tools, prompt)
-agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=True)
+agent_executor = create_react_agent(llm, tools)
 
 # Display Chat
 for msg in st.session_state.messages:
@@ -122,12 +114,20 @@ if user_input := st.chat_input("Speak to the Troll..."):
         st.write(user_input)
 
     with st.chat_message("assistant"):
-        response = agent_executor.invoke({
-            "input": user_input,
-            "chat_history": st.session_state.messages
-        })
+        # Prepare messages for langgraph format
+        messages = [SystemMessage(content=system_instruction)]
+        # Add chat history (convert to langchain message format)
+        for msg in st.session_state.messages[:-1]:  # Exclude the current user input
+            if msg["role"] == "user":
+                messages.append(("user", msg["content"]))
+            elif msg["role"] == "assistant":
+                messages.append(("assistant", msg["content"]))
+        # Add current user input
+        messages.append(("user", user_input))
         
-        output_text = response["output"]
+        response = agent_executor.invoke({"messages": messages})
+        
+        output_text = response["messages"][-1].content
         st.write(output_text)
         st.session_state.messages.append({"role": "assistant", "content": output_text})
 
