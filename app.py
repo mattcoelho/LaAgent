@@ -117,7 +117,7 @@ with st.sidebar:
 
 # 7. CHAT LOGIC
 # Setup Agent
-llm = ChatGroq(model="llama-3.3-70b-versatile", api_key=api_key)
+llm = ChatGroq(model="llama-3.1-8b-instant", api_key=api_key)
 agent_executor = create_react_agent(llm, tools)
 
 # Display Chat
