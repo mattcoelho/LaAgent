@@ -7,7 +7,7 @@ from groq import RateLimitError
 
 # 1. PAGE CONFIG
 st.set_page_config(page_title="Bridge of Death", layout="wide")
-st.title("🧌 The Bridge of Death (Demo)")
+st.title("🧌 The Bridge of Death (AI Agent Demo)")
 
 
 st.markdown("""
