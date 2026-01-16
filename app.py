@@ -2,7 +2,7 @@ import streamlit as st
 from langchain_groq import ChatGroq
 from langchain_core.tools import tool
 from langgraph.prebuilt import create_react_agent
-from langchain_core.messages import SystemMessage, ToolMessage
+from langchain_core.messages import SystemMessage, ToolMessage, HumanMessage, AIMessage
 
 # 1. PAGE CONFIG
 st.set_page_config(page_title="Bridge of Death", layout="wide")
@@ -117,11 +117,11 @@ if user_input := st.chat_input("Speak to the Troll..."):
         # Add chat history (convert to langchain message format)
         for msg in st.session_state.messages[:-1]:  # Exclude the current user input
             if msg["role"] == "user":
-                messages.append(("user", msg["content"]))
+                messages.append(HumanMessage(content=msg["content"]))
             elif msg["role"] == "assistant":
-                messages.append(("assistant", msg["content"]))
+                messages.append(AIMessage(content=msg["content"]))
         # Add current user input
-        messages.append(("user", user_input))
+        messages.append(HumanMessage(content=user_input))
         
         response = agent_executor.invoke({"messages": messages})
         
