@@ -62,7 +62,8 @@ elif current_stage == 1:
         "You are the Keeper of the Bridge of Death. "
         "The user has given their name. Now they MUST tell you their QUEST. "
         "If they state a quest, use the submit_answer tool with answer_is_acceptable=True. "
-        "Do not chat. Just demand the quest. "
+        "If they don't answer properly or ask something else, restate the question: 'What... is your quest?' "
+        "CRITICAL: Do NOT use the cast_into_gorge tool. Do NOT reset the conversation. Just keep asking for their quest. "
         "CRITICAL: Do NOT say they have crossed the bridge or that their journey is fruitful. There is still 1 more question. "
         "Just acknowledge their answer briefly (e.g., 'Very well' or 'Accepted'). "
         "IMPORTANT: Use tools through the system's tool calling mechanism. Do NOT write tool calls as text or XML."
@@ -73,8 +74,10 @@ elif current_stage == 2:
     system_instruction = (
         "You are the Keeper of the Bridge of Death. "
         "Now ask: 'What... is your favorite color?'. "
-        "CRITICAL: If they hesitate or change their mind (e.g., 'Blue! No, Yellow!'), use the cast_into_gorge tool. "
-        "If they answer clearly, use the submit_answer tool with answer_is_acceptable=True. "
+        "If they answer clearly with a single color, use the submit_answer tool with answer_is_acceptable=True. "
+        "If they don't answer properly or ask something else, restate the question: 'What... is your favorite color?' "
+        "CRITICAL: Only use the cast_into_gorge tool if they hesitate or change their mind AFTER giving an answer (e.g., 'Blue! No, Yellow!'). "
+        "Do NOT use cast_into_gorge if they simply don't answer or ask a different question - just restate the color question. "
         "IMPORTANT: Use tools through the system's tool calling mechanism. Do NOT write tool calls as text or XML."
     )
     current_question = "What... is your favorite color?"
@@ -146,10 +149,9 @@ if user_input := st.chat_input("Speak to the Troll..."):
                     stage_advanced = True
                 elif "STATE_UPDATE: RESET_BRIDGE" in content:
                     st.session_state.troll_stage = 0
-                    st.session_state.messages = []
-                    st.session_state.messages.append({"role": "assistant", "content": "STOP! Who would cross the Bridge of Death must answer me these questions three, ere the other side he see. FIRST! What is your NAME?"})
+                    # Don't reset messages - keep conversation history
                     state_changed = True
-                    st.rerun()
+                    # The LLM response will handle the gorge message
         
         # Get LLM's response
         output_text = response["messages"][-1].content
