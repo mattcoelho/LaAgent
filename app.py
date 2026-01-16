@@ -162,29 +162,9 @@ if user_input := st.chat_input("Speak to the Troll..."):
             elif current_stage == 1:
                 output_text = "Very well. You may proceed."
         
-        # If stage advanced, combine response with next question in a single message
-        if stage_advanced:
-            # Determine the next question based on new stage
-            new_stage = st.session_state.troll_stage
-            if new_stage == 1:
-                next_question = "What... is your quest?"
-            elif new_stage == 2:
-                next_question = "What... is your favorite color?"
-            else:
-                next_question = "You have crossed the Bridge of Death. May your journey be fruitful."
-            
-            # Combine LLM response with next question in a single message
-            if not output_text.strip().endswith(('.', '!', '?')):
-                combined_message = f"{output_text}. {next_question}"
-            else:
-                combined_message = f"{output_text} {next_question}"
-            
-            st.write(combined_message)
-            st.session_state.messages.append({"role": "assistant", "content": combined_message})
-        else:
-            # Normal response - show LLM's output only
-            st.write(output_text)
-            st.session_state.messages.append({"role": "assistant", "content": output_text})
+        # Show LLM's response (it already includes the next question if stage advanced)
+        st.write(output_text)
+        st.session_state.messages.append({"role": "assistant", "content": output_text})
 
         if state_changed or st.session_state.troll_stage != current_stage:
             st.rerun()
