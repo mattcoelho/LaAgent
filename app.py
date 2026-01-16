@@ -8,6 +8,13 @@ from langchain_core.messages import SystemMessage, ToolMessage, HumanMessage, AI
 st.set_page_config(page_title="Bridge of Death", layout="wide")
 st.title("🧌 The Bridge of Death (Secrets Edition)")
 
+st.markdown("""
+### 🛡️ Concept: Deterministic State Machines
+This demo proves two critical capabilities:
+1.  **State-Based Persona Switching:** The system prompt dynamically changes based on user progress, modeling "Authorized" vs. "Unauthorized" flows.
+2.  **Tool-Gated Transitions:** The LLM cannot "hallucinate" permission; it must invoke a governance tool to update the session state.
+""")
+
 # 2. SECURE API KEY RETRIEVAL (The "Production" Setup)
 # This looks for GROQ_API_KEY in .streamlit/secrets.toml (Local) or Streamlit Cloud Secrets
 if "GROQ_API_KEY" in st.secrets:
