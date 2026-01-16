@@ -2,7 +2,7 @@ import streamlit as st
 from langchain_groq import ChatGroq
 from langchain_core.tools import tool
 from langgraph.prebuilt import create_react_agent
-from langchain_core.messages import SystemMessage
+from langchain_core.messages import SystemMessage, ToolMessage
 
 # 1. PAGE CONFIG
 st.set_page_config(page_title="Bridge of Death", layout="wide")
@@ -29,18 +29,16 @@ def submit_answer(answer_is_acceptable: bool):
     """
     Call this tool when the user provides a valid answer to the current question.
     If the answer is gibberish, do NOT call this.
+    Returns a status message that will be used to update the stage.
     """
     if answer_is_acceptable:
-        st.session_state.troll_stage += 1
-        return "Answer accepted. Proceeding to next stage."
+        return "STATE_UPDATE: ADVANCE_STAGE"
     return "Answer rejected."
 
 @tool
 def cast_into_gorge():
     """Call this if the user answers the 'Color' question incorrectly or acts rude."""
-    st.session_state.troll_stage = 0
-    st.session_state.messages = [] # Wipe history
-    return "User has been cast into the Gorge of Eternal Peril. Resetting."
+    return "STATE_UPDATE: RESET_BRIDGE"
 
 tools = [submit_answer, cast_into_gorge]
 
@@ -127,9 +125,26 @@ if user_input := st.chat_input("Speak to the Troll..."):
         
         response = agent_executor.invoke({"messages": messages})
         
+        # Check for tool calls and update state accordingly
+        state_changed = False
+        for msg in response["messages"]:
+            # Check if this is a tool message with state update
+            if isinstance(msg, ToolMessage):
+                content = str(msg.content) if hasattr(msg, 'content') else ""
+                if "STATE_UPDATE: ADVANCE_STAGE" in content:
+                    st.session_state.troll_stage += 1
+                    state_changed = True
+                elif "STATE_UPDATE: RESET_BRIDGE" in content:
+                    st.session_state.troll_stage = 0
+                    st.session_state.messages = []
+                    st.session_state.messages.append({"role": "assistant", "content": "STOP! Who would cross the Bridge of Death must answer me these questions three, ere the other side he see."})
+                    state_changed = True
+                    st.rerun()
+                    break
+        
         output_text = response["messages"][-1].content
         st.write(output_text)
         st.session_state.messages.append({"role": "assistant", "content": output_text})
 
-        if st.session_state.troll_stage != current_stage:
+        if state_changed or st.session_state.troll_stage != current_stage:
             st.rerun()
