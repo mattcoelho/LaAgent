@@ -9,7 +9,7 @@ st.set_page_config(page_title="Bridge of Death", layout="wide")
 st.title("🧌 The Bridge of Death (Demo)")
 
 st.markdown("""
-🛡️ None shall pass... without a state update.
+### 🛡️ None shall pass... without a state update.
 
 This app demonstrates **State-Based Persona Switching**. Notice how the "Troll's" personality (System Prompt) changes strictly based on your progression through the "Bridge." It uses **Tool Calling** as a secure gate... proving that agents can be both conversational and deterministic.
 """)
