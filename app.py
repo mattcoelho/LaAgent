@@ -6,12 +6,11 @@ from langchain_core.messages import SystemMessage, ToolMessage, HumanMessage, AI
 
 # 1. PAGE CONFIG
 st.set_page_config(page_title="Bridge of Death", layout="wide")
-st.title("🧌 The Bridge of Death (Secrets Edition)")
+st.title("🧌 The Bridge of Death (Demo)")
 
 st.markdown("""
-🛡️ Concept: Deterministic State Machines
-1.  **State-Based Persona Switching:** The system prompt dynamically changes based on user progress, modeling "Authorized" vs. "Unauthorized" flows.
-2.  **Tool-Gated Transitions:** The LLM cannot "hallucinate" permission; it must invoke a governance tool to update the session state.
+🛡️ None shall pass... without a state update.
+This app demonstrates **State-Based Persona Switching**. Notice how the "Troll's" personality (System Prompt) changes strictly based on your progression through the "Bridge." It uses **Tool Calling** as a secure gate—proving that agents can be both conversational and deterministic.
 """)
 
 # 2. SECURE API KEY RETRIEVAL (The "Production" Setup)
@@ -110,7 +109,7 @@ with st.sidebar:
     st.write(f"**Current Stage:** {current_stage}/3")
     st.progress(min(current_stage / 3, 1.0))
     st.info(f"**System Instruction:**\n\n{system_instruction}")
-    st.success("✅ API Key loaded from Secrets")
+    
 
 # 7. CHAT LOGIC
 # Setup Agent
