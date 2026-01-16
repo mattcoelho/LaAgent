@@ -147,7 +147,12 @@ if user_input := st.chat_input("Speak to the Troll..."):
                     state_changed = True
                     st.rerun()
         
-        # If stage advanced, automatically ask the next question instead of showing LLM response
+        # Always show LLM's response first
+        output_text = response["messages"][-1].content
+        st.write(output_text)
+        st.session_state.messages.append({"role": "assistant", "content": output_text})
+        
+        # If stage advanced, also ask the next question
         if stage_advanced:
             # Determine the next question based on new stage
             new_stage = st.session_state.troll_stage
@@ -158,14 +163,9 @@ if user_input := st.chat_input("Speak to the Troll..."):
             else:
                 next_question = "You have crossed the Bridge of Death. May your journey be fruitful."
             
+            # Show the next question in a new message
             st.write(next_question)
             st.session_state.messages.append({"role": "assistant", "content": next_question})
-            st.rerun()
-        else:
-            # Normal response - show LLM's output
-            output_text = response["messages"][-1].content
-            st.write(output_text)
-            st.session_state.messages.append({"role": "assistant", "content": output_text})
 
         if state_changed or st.session_state.troll_stage != current_stage:
             st.rerun()
