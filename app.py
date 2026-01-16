@@ -9,8 +9,7 @@ st.set_page_config(page_title="Bridge of Death", layout="wide")
 st.title("🧌 The Bridge of Death (Secrets Edition)")
 
 st.markdown("""
-### 🛡️ Concept: Deterministic State Machines
-This demo proves two critical capabilities:
+🛡️ Concept: Deterministic State Machines
 1.  **State-Based Persona Switching:** The system prompt dynamically changes based on user progress, modeling "Authorized" vs. "Unauthorized" flows.
 2.  **Tool-Gated Transitions:** The LLM cannot "hallucinate" permission; it must invoke a governance tool to update the session state.
 """)
