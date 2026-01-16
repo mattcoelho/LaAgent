@@ -21,7 +21,7 @@ if "troll_stage" not in st.session_state:
     st.session_state.troll_stage = 0  # 0: Name, 1: Quest, 2: Color, 3: PASSED
 if "messages" not in st.session_state:
     st.session_state.messages = []
-    st.session_state.messages.append({"role": "assistant", "content": "STOP! Who would cross the Bridge of Death must answer me these questions three, ere the other side he see."})
+    st.session_state.messages.append({"role": "assistant", "content": "STOP! Who would cross the Bridge of Death must answer me these questions three, ere the other side he see. FIRST! What is your NAME?"})
 
 # 4. DEFINE TOOLS (The "Governance")
 @tool
@@ -131,6 +131,7 @@ if user_input := st.chat_input("Speak to the Troll..."):
         
         # Check for tool calls and update state accordingly
         state_changed = False
+        stage_advanced = False
         for msg in response["messages"]:
             # Check if this is a tool message with state update
             if isinstance(msg, ToolMessage):
@@ -138,17 +139,33 @@ if user_input := st.chat_input("Speak to the Troll..."):
                 if "STATE_UPDATE: ADVANCE_STAGE" in content:
                     st.session_state.troll_stage += 1
                     state_changed = True
+                    stage_advanced = True
                 elif "STATE_UPDATE: RESET_BRIDGE" in content:
                     st.session_state.troll_stage = 0
                     st.session_state.messages = []
-                    st.session_state.messages.append({"role": "assistant", "content": "STOP! Who would cross the Bridge of Death must answer me these questions three, ere the other side he see."})
+                    st.session_state.messages.append({"role": "assistant", "content": "STOP! Who would cross the Bridge of Death must answer me these questions three, ere the other side he see. FIRST! What is your NAME?"})
                     state_changed = True
                     st.rerun()
-                    break
         
-        output_text = response["messages"][-1].content
-        st.write(output_text)
-        st.session_state.messages.append({"role": "assistant", "content": output_text})
+        # If stage advanced, automatically ask the next question instead of showing LLM response
+        if stage_advanced:
+            # Determine the next question based on new stage
+            new_stage = st.session_state.troll_stage
+            if new_stage == 1:
+                next_question = "What... is your quest?"
+            elif new_stage == 2:
+                next_question = "What... is your favorite color?"
+            else:
+                next_question = "You have crossed the Bridge of Death. May your journey be fruitful."
+            
+            st.write(next_question)
+            st.session_state.messages.append({"role": "assistant", "content": next_question})
+            st.rerun()
+        else:
+            # Normal response - show LLM's output
+            output_text = response["messages"][-1].content
+            st.write(output_text)
+            st.session_state.messages.append({"role": "assistant", "content": output_text})
 
         if state_changed or st.session_state.troll_stage != current_stage:
             st.rerun()
