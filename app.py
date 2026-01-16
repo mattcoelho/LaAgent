@@ -51,6 +51,8 @@ if current_stage == 0:
         "The user MUST tell you their NAME. "
         "If they give you a name, use the submit_answer tool with answer_is_acceptable=True. "
         "If they ask anything else, yell 'STOP!' and demand their name again. "
+        "CRITICAL: Do NOT say they have crossed the bridge or that their journey is fruitful. There are still 2 more questions. "
+        "Just acknowledge their answer briefly (e.g., 'Very well' or 'Accepted'). "
         "IMPORTANT: Use tools through the system's tool calling mechanism. Do NOT write tool calls as text or XML."
     )
     current_question = "What... is your name?"
@@ -61,6 +63,8 @@ elif current_stage == 1:
         "The user has given their name. Now they MUST tell you their QUEST. "
         "If they state a quest, use the submit_answer tool with answer_is_acceptable=True. "
         "Do not chat. Just demand the quest. "
+        "CRITICAL: Do NOT say they have crossed the bridge or that their journey is fruitful. There is still 1 more question. "
+        "Just acknowledge their answer briefly (e.g., 'Very well' or 'Accepted'). "
         "IMPORTANT: Use tools through the system's tool calling mechanism. Do NOT write tool calls as text or XML."
     )
     current_question = "What... is your quest?"
@@ -149,6 +153,15 @@ if user_input := st.chat_input("Speak to the Troll..."):
         
         # Always show LLM's response first
         output_text = response["messages"][-1].content
+        
+        # Filter out completion messages if not at final stage
+        if current_stage < 2 and ("crossed the Bridge" in output_text.lower() or "journey be fruitful" in output_text.lower()):
+            # Replace completion message with simple acknowledgment
+            if current_stage == 0:
+                output_text = "Very well. You may proceed."
+            elif current_stage == 1:
+                output_text = "Very well. You may proceed."
+        
         st.write(output_text)
         st.session_state.messages.append({"role": "assistant", "content": output_text})
         
