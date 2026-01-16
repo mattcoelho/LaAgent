@@ -151,7 +151,7 @@ if user_input := st.chat_input("Speak to the Troll..."):
                     state_changed = True
                     st.rerun()
         
-        # Always show LLM's response first
+        # Get LLM's response
         output_text = response["messages"][-1].content
         
         # Filter out completion messages if not at final stage
@@ -162,10 +162,7 @@ if user_input := st.chat_input("Speak to the Troll..."):
             elif current_stage == 1:
                 output_text = "Very well. You may proceed."
         
-        st.write(output_text)
-        st.session_state.messages.append({"role": "assistant", "content": output_text})
-        
-        # If stage advanced, also ask the next question
+        # If stage advanced, combine response with next question in a single message
         if stage_advanced:
             # Determine the next question based on new stage
             new_stage = st.session_state.troll_stage
@@ -176,9 +173,18 @@ if user_input := st.chat_input("Speak to the Troll..."):
             else:
                 next_question = "You have crossed the Bridge of Death. May your journey be fruitful."
             
-            # Show the next question in a new message
-            st.write(next_question)
-            st.session_state.messages.append({"role": "assistant", "content": next_question})
+            # Combine LLM response with next question in a single message
+            if not output_text.strip().endswith(('.', '!', '?')):
+                combined_message = f"{output_text}. {next_question}"
+            else:
+                combined_message = f"{output_text} {next_question}"
+            
+            st.write(combined_message)
+            st.session_state.messages.append({"role": "assistant", "content": combined_message})
+        else:
+            # Normal response - show LLM's output only
+            st.write(output_text)
+            st.session_state.messages.append({"role": "assistant", "content": output_text})
 
         if state_changed or st.session_state.troll_stage != current_stage:
             st.rerun()
