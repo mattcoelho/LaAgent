@@ -1,154 +1,135 @@
 import streamlit as st
 from langchain_groq import ChatGroq
-from langgraph.prebuilt import create_react_agent
 from langchain_core.tools import tool
-from langchain_core.messages import SystemMessage
-import json
-import os
-from datetime import datetime
+from langchain.agents import AgentExecutor, create_tool_calling_agent
+from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 
 # 1. PAGE CONFIG
-st.set_page_config(page_title="LaAgent Demo", layout="wide")
+st.set_page_config(page_title="Bridge of Death", layout="wide")
+st.title("🧌 The Bridge of Death (Secrets Edition)")
 
-st.title("⚡ Real-Time Action Agent (Groq Powered)")
-st.markdown("A deterministic agent with **Human-in-the-Loop** guardrails, running on Llama 3 via Groq for ultra-low latency.")
+# 2. SECURE API KEY RETRIEVAL (The "Production" Setup)
+# This looks for GROQ_API_KEY in .streamlit/secrets.toml (Local) or Streamlit Cloud Secrets
+if "GROQ_API_KEY" in st.secrets:
+    api_key = st.secrets["GROQ_API_KEY"]
+else:
+    st.error("🚨 Missing API Key! Please add `GROQ_API_KEY` to your secrets.")
+    st.stop()
 
-# 2. DEFINE TOOLS (The "Actions")
-@tool
-def check_order_status(order_id: str):
-    """Checks the status of a customer order."""
-    # #region agent log
-    debug_log("app.py:15", "check_order_status called", {"order_id": order_id}, "B")
-    # #endregion
-    # Mock database return
-    result = {"order_id": order_id, "status": "shipped", "delivery_date": "2025-10-25"}
-    # #region agent log
-    debug_log("app.py:18", "check_order_status returning", {"result": result}, "B")
-    # #endregion
-    return result
-
-@tool
-def process_refund(order_id: str, amount: float):
-    """Processes a refund. REQUIRES HUMAN APPROVAL."""
-    return {"status": "success", "refunded_amount": amount}
-
-tools = [check_order_status, process_refund]
-
-# Debug logging helper
-def debug_log(location, message, data, hypothesis_id=None):
-    log_path = "/Users/teusbombs/Documents/Development/LaAgent/.cursor/debug.log"
-    try:
-        with open(log_path, "a") as f:
-            log_entry = {
-                "id": f"log_{int(datetime.now().timestamp() * 1000)}",
-                "timestamp": int(datetime.now().timestamp() * 1000),
-                "location": location,
-                "message": message,
-                "data": data,
-                "sessionId": "debug-session",
-                "runId": "run1",
-                "hypothesisId": hypothesis_id
-            }
-            f.write(json.dumps(log_entry) + "\n")
-    except Exception:
-        pass
-
-# #region agent log
-debug_log("app.py:25", "Tools defined", {"tool_count": len(tools), "tool_names": [t.name for t in tools]}, "C")
-# #endregion
-
-# Define your bot's persona/system prompt
-SYSTEM_PROMPT = """You are a troll that is blocking a bridge.
-Before you do anything helpful the user must answer these three questions.
-1. What is your name?
-2. What is your quest?
-3. What is your favorite color?
-
-If the user answers correctly, you will help them cross the bridge.
-If the user answers incorrectly, you will not help them cross the bridge.
-"""
-
-# 3. SETUP SESSION STATE
+# 3. STATE MANAGEMENT (The "Bridge" Logic)
+if "troll_stage" not in st.session_state:
+    st.session_state.troll_stage = 0  # 0: Name, 1: Quest, 2: Color, 3: PASSED
 if "messages" not in st.session_state:
     st.session_state.messages = []
-if "audit_log" not in st.session_state:
-    st.session_state.audit_log = []
+    st.session_state.messages.append({"role": "assistant", "content": "STOP! Who would cross the Bridge of Death must answer me these questions three, ere the other side he see."})
 
-# Sidebar: The "Glass Box"
+# 4. DEFINE TOOLS (The "Governance")
+@tool
+def submit_answer(answer_is_acceptable: bool):
+    """
+    Call this tool when the user provides a valid answer to the current question.
+    If the answer is gibberish, do NOT call this.
+    """
+    if answer_is_acceptable:
+        st.session_state.troll_stage += 1
+        return "Answer accepted. Proceeding to next stage."
+    return "Answer rejected."
+
+@tool
+def cast_into_gorge():
+    """Call this if the user answers the 'Color' question incorrectly or acts rude."""
+    st.session_state.troll_stage = 0
+    st.session_state.messages = [] # Wipe history
+    return "User has been cast into the Gorge of Eternal Peril. Resetting."
+
+tools = [submit_answer, cast_into_gorge]
+
+# 5. DYNAMIC SYSTEM PROMPT (The "Persona" Logic)
+current_stage = st.session_state.troll_stage
+
+if current_stage == 0:
+    system_instruction = (
+        "You are the Keeper of the Bridge of Death. "
+        "The user MUST tell you their NAME. "
+        "If they give you a name, call the tool 'submit_answer(True)'. "
+        "If they ask anything else, yell 'STOP!' and demand their name again."
+    )
+    current_question = "What... is your name?"
+
+elif current_stage == 1:
+    system_instruction = (
+        "You are the Keeper of the Bridge of Death. "
+        "The user has given their name. Now they MUST tell you their QUEST. "
+        "If they state a quest, call the tool 'submit_answer(True)'. "
+        "Do not chat. Just demand the quest."
+    )
+    current_question = "What... is your quest?"
+
+elif current_stage == 2:
+    system_instruction = (
+        "You are the Keeper of the Bridge of Death. "
+        "Now ask: 'What... is your favorite color?'. "
+        "CRITICAL: If they hesitate or change their mind (e.g., 'Blue! No, Yellow!'), call 'cast_into_gorge'. "
+        "If they answer clearly, call 'submit_answer(True)'."
+    )
+    current_question = "What... is your favorite color?"
+
+else: # Stage 3 (Passed)
+    system_instruction = (
+        "The user has successfully crossed the bridge. "
+        "You are now a grumpy but conversational troll. "
+        "You can answer their questions, but remind them occasionally that they got lucky."
+    )
+    current_question = "(Conversation Open)"
+
+# 6. SIDEBAR: THE GLASS BOX
 with st.sidebar:
-    st.header("🧠 Agent Reasoning (Glass Box)")
-    st.caption("Live view of tool calls and logic states.")
-    for log in st.session_state.audit_log:
-        st.code(log, language="json")
+    st.header("⚙️ Troll Logic State")
+    st.write(f"**Current Stage:** {current_stage}/3")
+    st.progress(min(current_stage / 3, 1.0))
+    st.info(f"**System Instruction:**\n\n{system_instruction}")
+    st.success("✅ API Key loaded from Secrets")
 
-# 4. GET API KEY FROM STREAMLIT SECRETS (with fallback for local development)
-try:
-    api_key = st.secrets["GROQ_API_KEY"]
-except (KeyError, AttributeError):
-    # Fallback for local development or if secret not configured in Streamlit Cloud
-    st.info("💡 **Note:** For Streamlit Cloud deployment, configure `GROQ_API_KEY` in your app's Settings → Secrets. For local testing, enter your key below.")
-    api_key = st.text_input("Enter Groq API Key:", type="password", help="Get a free key at console.groq.com")
+# 7. CHAT LOGIC
+# Setup Agent
+llm = ChatGroq(model="llama-3.3-70b-versatile", api_key=api_key)
+prompt = ChatPromptTemplate.from_messages([
+    ("system", system_instruction),
+    MessagesPlaceholder(variable_name="chat_history"),
+    ("human", "{input}"),
+    MessagesPlaceholder(variable_name="agent_scratchpad"),
+])
 
-if api_key:
-    try:
-        # Switch to Groq (Llama 3 70B is smart enough for tools)
-        # #region agent log
-        debug_log("app.py:62", "Creating LLM", {"model": "llama-3.3-70b-versatile", "has_api_key": bool(api_key)}, "D")
-        # #endregion
-        llm = ChatGroq(model="llama-3.3-70b-versatile", api_key=api_key)
-        # #region agent log
-        debug_log("app.py:64", "Creating agent executor", {"tool_count": len(tools)}, "E")
-        # #endregion
-        agent_executor = create_react_agent(llm, tools)
+agent = create_tool_calling_agent(llm, tools, prompt)
+agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=True)
 
-        # 5. CHAT INTERFACE
-        for msg in st.session_state.messages:
-            with st.chat_message(msg["role"]):
-                st.write(msg["content"])
+# Display Chat
+for msg in st.session_state.messages:
+    with st.chat_message(msg["role"]):
+        st.write(msg["content"])
 
-        if prompt := st.chat_input("Ask me anything"):
-            # Display user message
-            st.session_state.messages.append({"role": "user", "content": prompt})
-            with st.chat_message("user"):
-                st.write(prompt)
+# Auto-prompting the question logic
+last_role = st.session_state.messages[-1]["role"] if st.session_state.messages else "none"
+if current_stage < 3 and last_role != "assistant":
+     with st.chat_message("assistant"):
+        st.write(current_question)
+        st.session_state.messages.append({"role": "assistant", "content": current_question})
 
-            # Run Agent
-            with st.chat_message("assistant"):
-                # This is where LangGraph executes
-                # Prepend system message to set the bot's persona
-                messages = [
-                    SystemMessage(content=SYSTEM_PROMPT),
-                    ("user", prompt)
-                ]
-                # #region agent log
-                debug_log("app.py:81", "Messages before invoke", {"message_count": len(messages), "system_prompt": SYSTEM_PROMPT[:100], "user_prompt": prompt}, "A")
-                # #endregion
-                # #region agent log
-                debug_log("app.py:84", "Invoking agent executor", {}, "E")
-                # #endregion
-                response = agent_executor.invoke({"messages": messages})
-                # #region agent log
-                debug_log("app.py:85", "Agent response received", {"response_type": type(response).__name__, "message_count": len(response.get("messages", [])) if isinstance(response, dict) else 0}, "E")
-                # #endregion
-                # #region agent log
-                if isinstance(response, dict) and "messages" in response:
-                    last_msg = response["messages"][-1] if response["messages"] else None
-                    debug_log("app.py:86", "Last message details", {"message_type": type(last_msg).__name__ if last_msg else None, "has_content": hasattr(last_msg, "content") if last_msg else False, "content_preview": str(last_msg.content)[:200] if last_msg and hasattr(last_msg, "content") else None}, "A")
-                # #endregion
-                bot_msg = response["messages"][-1].content
-                # #region agent log
-                debug_log("app.py:87", "Bot message extracted", {"message_length": len(str(bot_msg)) if bot_msg else 0, "message_preview": str(bot_msg)[:200] if bot_msg else None}, "A")
-                # #endregion
-                st.write(bot_msg)
-                
-                # Update State
-                st.session_state.messages.append({"role": "assistant", "content": bot_msg})
-                
-                # Update Glass Box (Log the tool calls)
-                st.session_state.audit_log.append(f"User: {prompt}\nResponse: {bot_msg}")
-                
-    except Exception as e:
-        # #region agent log
-        debug_log("app.py:95", "Exception caught", {"error_type": type(e).__name__, "error_message": str(e), "error_args": str(e.args) if hasattr(e, "args") else None}, "A")
-        # #endregion
-        st.error(f"Error: {e}")
+# User Input
+if user_input := st.chat_input("Speak to the Troll..."):
+    st.session_state.messages.append({"role": "user", "content": user_input})
+    with st.chat_message("user"):
+        st.write(user_input)
+
+    with st.chat_message("assistant"):
+        response = agent_executor.invoke({
+            "input": user_input,
+            "chat_history": st.session_state.messages
+        })
+        
+        output_text = response["output"]
+        st.write(output_text)
+        st.session_state.messages.append({"role": "assistant", "content": output_text})
+
+        if st.session_state.troll_stage != current_stage:
+            st.rerun()
