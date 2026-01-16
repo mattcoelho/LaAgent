@@ -119,8 +119,8 @@ with st.sidebar:
 # Setup Agent
 # OLD: llm = ChatGroq(model="llama-3.1-8b-instant", api_key=api_key)
 
-# NEW: Use Mixtral (Smarter Logic, Decent Speed)
-llm = ChatGroq(model="mixtral-8x7b-32768", api_key=api_key)
+# NEW: Google's Gemma 2 9B (Smart & Efficient)
+llm = ChatGroq(model="gemma2-9b-it", api_key=api_key)
 agent_executor = create_react_agent(llm, tools)
 
 # Display Chat
