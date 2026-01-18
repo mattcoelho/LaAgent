@@ -15,10 +15,10 @@ st.markdown("""
         🧌 The Bridge of Death <span style='font-size: 1.5rem; color: #888;'>(AI Agent Demo)</span>
     </h1>
     <h3 style='margin-top: 5px; margin-bottom: 5px; color: #FF4B4B;'>
-        🛡️ None shall pass... 
+        🛡️ None shall pass... without a state update.
     </h3>
-    <p style='font-size: 1.1rem; margin-top: 0px; line-height: 1.5;'>
-        This Troll runs on strict <b>State-Machine Orchestration</b>. He literally <i>cannot</i> let you pass until a <b>verified tool execution</b> updates the workflow—proving secure agents can still have attitude.
+    <p style='font-size: 0.95rem; margin-top: 0px; line-height: 1.4;'>
+        This Troll runs on strict <b>State-Machine Orchestration</b>. He <i>cannot</i> let you pass until a <b>verified tool execution</b> updates the workflow—proving secure agents can still have attitude.
     </p>
     <hr style='margin-top: 10px; margin-bottom: 20px;'>
 """, unsafe_allow_html=True)
