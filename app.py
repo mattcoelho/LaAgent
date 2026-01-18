@@ -11,12 +11,16 @@ st.set_page_config(page_title="Bridge of Death", layout="wide")
 
 
 st.markdown("""
-<h1 style='text-align: left; margin-bottom: -20px; margin-top: -50px; font-size: 40px;'>
-        🧌 The Bridge of Death <span style='font-size: 20px; color: gray;'>(AI Agent Demo)</span>
+    <h1 style='margin-bottom: 0px; margin-top: -40px;'>
+        🧌 The Bridge of Death <span style='font-size: 1.5rem; color: #888;'>(AI Agent Demo)</span>
     </h1>
-### 🛡️ None shall pass... 
-
-This demo illustrates State-Machine Orchestration, enforcing secure, deterministic workflows by gating all persona changes and transitions behind verified tool executions.
+    <h3 style='margin-top: 5px; margin-bottom: 5px; color: #FF4B4B;'>
+        🛡️ None shall pass...
+    </h3>
+    <p style='font-size: 1.1rem; margin-top: 0px; line-height: 1.5;'>
+        This demo illustrates <b>State-Machine Orchestration</b>, enforcing secure, deterministic workflows by gating all persona changes and transitions behind verified tool executions.
+    </p>
+    <hr style='margin-top: 10px; margin-bottom: 20px;'>
 """, unsafe_allow_html=True)
 
 # 2. SECURE API KEY RETRIEVAL (The "Production" Setup)
