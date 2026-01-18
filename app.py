@@ -14,7 +14,7 @@ st.markdown("""
     <h1 style='margin-bottom: 0px; margin-top: -40px;'>
         🧌 The Bridge of Death <span style='font-size: 1.5rem; color: #888;'>(AI Agent Demo)</span>
     </h1>
-    <h3 style='margin-top: 5px; margin-bottom: 5px; color: #FF4B4B;'>
+    <h3 style='font-size: 1.2rem; margin-top: 5px; margin-bottom: 5px; color: #FF4B4B;'>
         🛡️ None shall pass... without a state update.
     </h3>
     <p style='font-size: 0.95rem; margin-top: 0px; line-height: 1.4;'>
