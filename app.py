@@ -7,14 +7,17 @@ from groq import RateLimitError
 
 # 1. PAGE CONFIG
 st.set_page_config(page_title="Bridge of Death", layout="wide")
-st.title("🧌 The Bridge of Death (AI Agent Demo)")
+# st.title("🧌 The Bridge of Death (AI Agent Demo)")
 
 
 st.markdown("""
+<h1 style='text-align: left; margin-bottom: -20px; margin-top: -50px; font-size: 40px;'>
+        🧌 The Bridge of Death <span style='font-size: 20px; color: gray;'>(AI Agent Demo)</span>
+    </h1>
 ### 🛡️ None shall pass... 
 
 This demo illustrates State-Machine Orchestration, enforcing secure, deterministic workflows by gating all persona changes and transitions behind verified tool executions.
-""")
+""", unsafe_allow_html=True)
 
 # 2. SECURE API KEY RETRIEVAL (The "Production" Setup)
 # This looks for GROQ_API_KEY in .streamlit/secrets.toml (Local) or Streamlit Cloud Secrets
