@@ -15,10 +15,10 @@ st.markdown("""
         🧌 The Bridge of Death <span style='font-size: 1.5rem; color: #888;'>(AI Agent Demo)</span>
     </h1>
     <h3 style='margin-top: 5px; margin-bottom: 5px; color: #FF4B4B;'>
-        🛡️ None shall pass...
+        🛡️ Where "None Shall Pass" meets "Access Denied."
     </h3>
     <p style='font-size: 1.1rem; margin-top: 0px; line-height: 1.5;'>
-        This demo illustrates <b>State-Machine Orchestration</b>, enforcing secure, deterministic workflows by gating all persona changes and transitions behind verified tool executions.
+        A demo of <b>State-Machine Orchestration</b> with a bad attitude. Persona changes are strictly gated by <b>tool executions</b>, ensuring the Troll never breaks character (or protocol) until the workflow says so.
     </p>
     <hr style='margin-top: 10px; margin-bottom: 20px;'>
 """, unsafe_allow_html=True)
