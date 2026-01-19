@@ -4,6 +4,7 @@ from langchain_core.tools import tool
 from langgraph.prebuilt import create_react_agent
 from langchain_core.messages import SystemMessage, ToolMessage, HumanMessage, AIMessage
 from groq import RateLimitError
+import re
 
 # 1. PAGE CONFIG
 st.set_page_config(page_title="Bridge of Death", layout="wide")
@@ -212,15 +213,36 @@ if user_input := st.chat_input("Speak to the Troll..."):
                 elif current_stage == 1:
                     output_text = "Very well. You may proceed."
             
-            # If cast into gorge, show gorge message first, then LLM's mocking response
+            # If cast into gorge, filter response and combine with gorge message
             if cast_into_gorge:
+                # Filter out bridge question references from LLM response
+                bridge_question_patterns = [
+                    "stop! who would cross",
+                    "what is your name",
+                    "what... is your name",
+                    "first! what is your name",
+                    "questions three",
+                    "ere the other side"
+                ]
+                for pattern in bridge_question_patterns:
+                    if pattern in output_text.lower():
+                        # Remove the pattern and surrounding text
+                        output_text = re.sub(rf'.*{re.escape(pattern)}.*', '', output_text, flags=re.IGNORECASE)
+                        output_text = output_text.strip()
+                
+                # If output is empty or still contains unwanted content, use just mocking
+                if not output_text.strip() or any(pattern in output_text.lower() for pattern in bridge_question_patterns):
+                    output_text = "Ha! You failed! You're dead now!"
+                
+                # Combine gorge message with filtered LLM response
                 gorge_message = "🔥 You have been cast into the Gorge of Eternal Peril, a fiery abyss from which there's no return!"
-                st.write(gorge_message)
-                st.session_state.messages.append({"role": "assistant", "content": gorge_message})
-            
-            # Show LLM's response (it already includes the next question if stage advanced)
-            st.write(output_text)
-            st.session_state.messages.append({"role": "assistant", "content": output_text})
+                combined_message = f"{gorge_message} {output_text}"
+                st.write(combined_message)
+                st.session_state.messages.append({"role": "assistant", "content": combined_message})
+            else:
+                # Show LLM's response (it already includes the next question if stage advanced)
+                st.write(output_text)
+                st.session_state.messages.append({"role": "assistant", "content": output_text})
 
             if state_changed or st.session_state.troll_stage != current_stage:
                 st.rerun()
