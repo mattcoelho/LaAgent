@@ -186,6 +186,7 @@ if user_input := st.chat_input("Speak to the Troll..."):
             # Check for tool calls and update state accordingly
             state_changed = False
             stage_advanced = False
+            cast_into_gorge = False
             for msg in response["messages"]:
                 # Check if this is a tool message with state update
                 if isinstance(msg, ToolMessage):
@@ -198,7 +199,7 @@ if user_input := st.chat_input("Speak to the Troll..."):
                         st.session_state.troll_stage = -1
                         # Don't reset messages - keep conversation history
                         state_changed = True
-                        # The LLM response will handle the gorge message
+                        cast_into_gorge = True
             
             # Get LLM's response
             output_text = response["messages"][-1].content
@@ -210,6 +211,12 @@ if user_input := st.chat_input("Speak to the Troll..."):
                     output_text = "Very well. You may proceed."
                 elif current_stage == 1:
                     output_text = "Very well. You may proceed."
+            
+            # If cast into gorge, show gorge message first, then LLM's mocking response
+            if cast_into_gorge:
+                gorge_message = "🔥 You have been cast into the Gorge of Eternal Peril, a fiery abyss from which there's no return!"
+                st.write(gorge_message)
+                st.session_state.messages.append({"role": "assistant", "content": gorge_message})
             
             # Show LLM's response (it already includes the next question if stage advanced)
             st.write(output_text)
