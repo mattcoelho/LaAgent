@@ -54,6 +54,8 @@ This demo wraps a **rigid deterministic workflow** in a playful persona. The Tro
    Create a `.streamlit/secrets.toml` file:
    ```toml
    GROQ_API_KEY = "your_groq_api_key_here"
+   # Optional: override the default Groq model.
+   GROQ_MODEL = "openai/gpt-oss-120b"
    ```
 
 4. **Run the app**
@@ -78,6 +80,7 @@ This demo wraps a **rigid deterministic workflow** in a playful persona. The Tro
    - Go to [share.streamlit.io](https://share.streamlit.io/)
    - Connect your GitHub repository
    - Add your `GROQ_API_KEY` in the app's Settings → Secrets
+   - Optional: add `GROQ_MODEL` if you want to override the default `openai/gpt-oss-120b`
    - Deploy!
 
 3. **Your app is live!**

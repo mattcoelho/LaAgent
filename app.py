@@ -4,6 +4,7 @@ from langchain_core.tools import tool
 from langgraph.prebuilt import create_react_agent
 from langchain_core.messages import SystemMessage, ToolMessage, HumanMessage, AIMessage
 from groq import RateLimitError
+import os
 import re
 
 # 1. PAGE CONFIG
@@ -31,6 +32,8 @@ if "GROQ_API_KEY" in st.secrets:
 else:
     st.error("🚨 Missing API Key! Please add `GROQ_API_KEY` to your secrets.")
     st.stop()
+
+groq_model = st.secrets.get("GROQ_MODEL", os.getenv("GROQ_MODEL", "openai/gpt-oss-120b"))
 
 # 3. STATE MANAGEMENT (The "Bridge" Logic)
 if "troll_stage" not in st.session_state:
@@ -148,7 +151,7 @@ with st.sidebar:
 
 # 7. CHAT LOGIC
 # Setup Agent
-llm = ChatGroq(model="llama-3.3-70b-versatile", api_key=api_key)
+llm = ChatGroq(model=groq_model, api_key=api_key)
 agent_executor = create_react_agent(llm, tools)
 
 # Display Chat
