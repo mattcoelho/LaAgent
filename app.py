@@ -37,11 +37,21 @@ else:
 groq_model = st.secrets.get("GROQ_MODEL", os.getenv("GROQ_MODEL", "openai/gpt-oss-120b"))
 
 # 3. STATE MANAGEMENT (The "Bridge" Logic)
+INITIAL_BRIDGE_PROMPT = "STOP! Who would cross the Bridge of Death must answer me these questions three, ere the other side he see. FIRST! What is your NAME?"
+
+
+def reset_bridge_state():
+    st.session_state.troll_stage = 0
+    st.session_state.messages = [{"role": "assistant", "content": INITIAL_BRIDGE_PROMPT}]
+    st.session_state.warning_counts = {}
+    st.session_state.traveler_name = None
+    st.session_state.traveler_quest = None
+
+
 if "troll_stage" not in st.session_state:
     st.session_state.troll_stage = 0  # 0: Name, 1: Quest, 2: Color, 3: PASSED, -1: FAILED (Gorge)
 if "messages" not in st.session_state:
-    st.session_state.messages = []
-    st.session_state.messages.append({"role": "assistant", "content": "STOP! Who would cross the Bridge of Death must answer me these questions three, ere the other side he see. FIRST! What is your NAME?"})
+    st.session_state.messages = [{"role": "assistant", "content": INITIAL_BRIDGE_PROMPT}]
 if "warning_counts" not in st.session_state:
     st.session_state.warning_counts = {}
 if "traveler_name" not in st.session_state:
@@ -389,6 +399,10 @@ with st.sidebar:
         st.write(f"**Accepted Quest:** {st.session_state.traveler_quest}")
     st.info(f"**Rule Summary:**\n\n{stage_config['summary']}")
     st.caption(f"**Active Tools:** {describe_tools(active_tools)}")
+    if current_stage == -1:
+        if st.button("Try Again", use_container_width=True):
+            reset_bridge_state()
+            st.rerun()
     
 
 # 7. CHAT LOGIC
