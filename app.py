@@ -21,7 +21,7 @@ st.markdown("""
         🛡️ None shall pass...
     </h3>
     <p style='font-size: 0.95rem; margin-top: 0px; line-height: 1.4;'>
-        This demo wraps a rigid <b>deterministic workflow</b> in a playful persona. The Troll's mood swings are actually gated by <b>verified tool executions</b>, ensuring that no user "hallucinates" their way across the bridge without permission.
+        A helpful AI waits beyond the bridge, but the Troll will not accept hallucinated progress. Each answer is checked through <b>verified tool executions</b>, proving how a <b>deterministic workflow</b> can safely unlock flexible AI assistance.
     </p>
     <hr style='margin-top: 10px; margin-bottom: 20px;'>
 """, unsafe_allow_html=True)
