@@ -94,7 +94,7 @@ BASE_GUARDRAILS = dedent("""
 STAGE_CONFIGS = {
     0: {
         "question": "What... is your name?",
-        "summary": "Ask for a plausible name. One bad answer earns a warning; the next casts into the gorge.",
+        "summary": "Gatekeeping mode: the LLM classifies the answer, but only tool calls can advance state. One bad answer earns a dynamic warning; the next casts into the gorge.",
         "prompt": dedent("""
             ROLE: Keeper of the Bridge of Death.
             CURRENT STAGE: NAME (0/3)
@@ -116,7 +116,7 @@ STAGE_CONFIGS = {
     },
     1: {
         "question": "What... is your quest?",
-        "summary": "Ask for any stated goal or purpose. One bad answer earns a warning; the next casts into the gorge.",
+        "summary": "Gatekeeping mode: the LLM accepts any stated goal, reacts in character, and the app enforces one warning before failure.",
         "prompt": dedent("""
             ROLE: Keeper of the Bridge of Death.
             CURRENT STAGE: QUEST (1/3)
@@ -139,7 +139,7 @@ STAGE_CONFIGS = {
     },
     2: {
         "question": "What... is your favorite color?",
-        "summary": "Ask for a clear color. submit_answer passes; cast_into_gorge handles hesitation or changed answers.",
+        "summary": "Final verification: one clear color passes, while hesitation or changed answers trigger the failure tool.",
         "prompt": dedent("""
             ROLE: Keeper of the Bridge of Death.
             CURRENT STAGE: COLOR (2/3)
@@ -159,7 +159,7 @@ STAGE_CONFIGS = {
     },
     -1: {
         "question": "(User is Dead - Gorge of Eternal Peril)",
-        "summary": "Failure state. No tools are available; respond only with short failure-state mockery.",
+        "summary": "Failure state: no tools are available. The LLM stays in persona and gives short failure-state responses.",
         "prompt": dedent("""
             ROLE: Keeper of the Bridge of Death.
             CURRENT STAGE: FAILED
@@ -176,7 +176,7 @@ STAGE_CONFIGS = {
     },
     3: {
         "question": "(Conversation Open)",
-        "summary": "Passed state. No tools are available; keep the grumpy persona but allow normal conversation.",
+        "summary": "Open LLM mode: the deterministic gate is complete, tools are disabled, and the troll can now answer questions, write code, explain ideas, brainstorm, or chat while staying in persona.",
         "prompt": dedent("""
             ROLE: Keeper of the Bridge of Death.
             CURRENT STAGE: PASSED
